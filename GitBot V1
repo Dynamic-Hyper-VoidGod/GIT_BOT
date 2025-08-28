@@ -1,0 +1,82 @@
+# Github bot to fetch repositories
+import requests
+from datetime import datetime
+import json, os
+
+print("Choose an option: ")
+print("1 -> Search Github repositories, and save search results onto JSON")
+print("2 -> Read saved JSON results")
+
+choice = int(input("Enter 1 or 2: "))
+
+def search_repositories():
+    query = input("Enter the name of the topic you wish to search: ")
+    sort = input("Choose from the sorting criteria (stars, forks, updated): ")
+    perPage = int(input("Enter the number of results to be displayed per page: "))
+    page = int(input("Page number: "))
+    order = input("Choose the order of display (asc or desc only): ")
+
+    url = f"https://api.github.com/search/repositories?q={query}&sort={sort}&order={order}&per_page={perPage}&page={page}"
+    response = requests.get(url)
+
+    print("Status code: ",response.status_code) 
+
+    data = response.json()
+    repos = data["items"]
+    
+    run_block = {
+        "query":query,
+        "sort":sort,
+        "order":order,
+        "page":page,
+        "perPage":perPage,
+        "timestamp":datetime.now().isoformat(),
+        "results":[]
+    }
+
+    for i, repo in enumerate(repos[:perPage],start=1): #(i,seq[i]) - enumerate is useful for looping over a sequence while keeping track of the index of each element.
+        print(f"{i}:{repo['name']}")
+        print("  URL:", repo["html_url"]) #The space is given to keep this under the respective repo
+        print("  Description:", repo['description'] if repo['description'] else "No description provided.")
+        print("  Stars:", repo["stargazers_count"])
+        print("-"*40)
+        #"Storing results"
+        repo_entry = {
+            "name": repo["name"],
+            "url": repo["html_url"],
+            "description": repo["description"] if repo['description'] else "No description provided",
+            "stars": repo["stargazers_count"]
+        }
+        run_block["results"].append(repo_entry)
+
+    # Storing results onto a file
+    storagefile = "results.json"
+    if os.path.exists(storagefile):
+        with open(storagefile,"r") as f:
+            all_runs = json.load(f) # Load old data (list of runs)
+    else:
+        all_runs = [] # If file doesn't exist start from scratch
+
+    all_runs.append(run_block)
+
+    with open(storagefile,"w") as f:
+        json.dump(all_runs,f, indent=5)
+
+def read_json():
+    if os.path.exists("results.json"):
+        with open("results.json","r") as f:
+            all_runs = json.load(f)
+            if all_runs:
+                print(json.dumps(all_runs,indent=5))
+            else:
+                print("No saved results found, switching to search..")
+                search_repositories()
+    else:
+        print("No JSON file found, switching to search..")
+        search_repositories()         
+
+if choice == 1:
+    search_repositories()
+    
+elif choice == 2:
+    read_json()
