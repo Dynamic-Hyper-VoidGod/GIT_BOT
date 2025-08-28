@@ -1,5 +1,5 @@
 # GIT_BOT
-A GitHub bot to retrieve repositiories of interest to CLI/UI and essentially monitor repos of topic of interest and retireve latest versions of it
+A GitHub bot (made using Python) to retrieve repositiories of interest to CLI/UI and essentially monitor repos of topic of interest and retireve latest versions of it
 Currently at Version 1, it's capable of fetching and storing your search results onto a .json file.
 
 **#Installation**
